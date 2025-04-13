@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "This is simple todo app backend for understanding API's",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RF-Automations/understanding-rest.git"
+  },
+  "keywords": [
+    "API's",
+    "Nodejs"
+  ],
+  "author": "Barun Tiwary",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RF-Automations/understanding-rest/issues"
+  },
+  "homepage": "https://github.com/RF-Automations/understanding-rest#readme",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}

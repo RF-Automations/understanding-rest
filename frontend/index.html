@@ -256,7 +256,7 @@
 
     <script>
         // API URL configuration
-        const API_URL = 'http://localhost:5000/api/tasks';
+        const API_URL = 'http://localhost:8080/api/tasks';
         
         // DOM Elements
         const taskForm = document.getElementById('taskForm');
@@ -328,6 +328,7 @@
                     body: JSON.stringify({ title })
                 });
                 
+                console.log(response)
                 if (!response.ok) {
                     throw new Error('Failed to add task');
                 }

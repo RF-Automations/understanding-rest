@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        /* Container styles */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+        }
+
+        /* Header styles */
+        h1 {
+            color: #3b82f6;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        /* Error message */
+        .error-message {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        /* Form styles */
+        .task-form {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px 0 0 4px;
+            font-size: 1rem;
+        }
+
+        .task-input:focus {
+            outline: 2px solid #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .add-button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .add-button:hover {
+            background-color: #2563eb;
+        }
+
+        /* Filter buttons */
+        .filter-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-button {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            border: none;
+            background-color: #e5e7eb;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .filter-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        /* Loading indicator */
+        .loading {
+            text-align: center;
+            color: #6b7280;
+            margin: 1rem 0;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            color: #6b7280;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        /* Task list */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .task-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 0.75rem;
+            background-color: #f9fafb;
+        }
+
+        .task-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-details {
+            display: flex;
+            align-items: center;
+        }
+
+        .task-checkbox {
+            margin-right: 0.75rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
+
+        .task-text {
+            color: #1f2937;
+        }
+
+        .task-date {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .task-completed .task-text {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .edit-button {
+            color: #3b82f6;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .delete-button {
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .edit-button:hover {
+            color: #2563eb;
+        }
+
+        .delete-button:hover {
+            color: #dc2626;
+        }
+
+        /* Edit task form */
+        .edit-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .edit-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .save-button {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .cancel-button {
+            background-color: #6b7280;
+            color: white;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .save-button:hover {
+            background-color: #059669;
+        }
+
+        .cancel-button:hover {
+            background-color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TaskMaster</h1>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <form id="taskForm" class="task-form">
+            <input type="text" id="newTaskInput" class="task-input" placeholder="Add a new task...">
+            <button type="submit" class="add-button">Add</button>
+        </form>
+        
+        <div class="filter-container">
+            <button class="filter-button active" data-filter="all">All</button>
+            <button class="filter-button" data-filter="active">Active</button>
+            <button class="filter-button" data-filter="completed">Completed</button>
+        </div>
+        
+        <div id="loading" class="loading">Loading tasks...</div>
+        <div id="emptyState" class="empty-state">No tasks available</div>
+        
+        <div id="taskList" class="task-list"></div>
+    </div>
+
+    <script>
+        // API URL configuration
+        const API_URL = 'http://localhost:5000/api/tasks';
+        
+        // DOM Elements
+        const taskForm = document.getElementById('taskForm');
+        const newTaskInput = document.getElementById('newTaskInput');
+        const taskList = document.getElementById('taskList');
+        const errorMessage = document.getElementById('errorMessage');
+        const loadingIndicator = document.getElementById('loading');
+        const emptyState = document.getElementById('emptyState');
+        const filterButtons = document.querySelectorAll('.filter-button');
+        
+        // Application State
+        let tasks = [];
+        let currentFilter = 'all';
+        let editingTaskId = null;
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTasks();
+            setupEventListeners();
+        });
+        
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Form submission for adding a task
+            taskForm.addEventListener('submit', handleAddTask);
+            
+            // Filter button clicks
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const filter = button.getAttribute('data-filter');
+                    setFilter(filter);
+                });
+            });
+        }
+        
+        // Fetch all tasks from the API
+        async function fetchTasks() {
+            try {
+                showLoading(true);
+                
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch tasks');
+                }
+                
+                tasks = await response.json();
+                renderTasks();
+                
+                showError(null);
+            } catch (error) {
+                console.error(error);
+                showError('Failed to load tasks. Please try again later.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Add a new task
+        async function handleAddTask(event) {
+            event.preventDefault();
+            
+            const title = newTaskInput.value.trim();
+            if (!title) return;
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to add task');
+                }
+                
+                const newTask = await response.json();
+                tasks.push(newTask);
+                
+                newTaskInput.value = '';
+                renderTasks();
+                showError(null);
+            } catch (error) {
+                console.error(error);
+                showError('Failed to add task. Please try again.');
+            }
+        }
+        
+        // Delete a task
+        async function deleteTask(id) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to delete task');
+                }
+                
+                tasks = tasks.filter(task => task.id !== id);
+                renderTasks();
+                showError(null);
+            } catch (error) {
+                console.error(error);
+                showError('Failed to delete task. Please try again.');
+            }
+        }
+        
+        // Toggle task completion status
+        async function toggleTaskCompletion(id) {
+            try {
+                const response = await fetch(`${API_URL}/${id}/toggle`, {
+                    method: 'PATCH'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update task status');
+                }
+                
+                const updatedTask = await response.json();
+                tasks = tasks.map(task => task.id === id ? updatedTask : task);
+                
+                renderTasks();
+                showError(null);
+            } catch (error) {
+                console.error(error);
+                showError('Failed to update task status. Please try again.');
+            }
+        }
+        
+        // Start editing a task
+        function startEditingTask(id) {
+            editingTaskId = id;
+            renderTasks();
+        }
+        
+        // Cancel editing a task
+        function cancelEditingTask() {
+            editingTaskId = null;
+            renderTasks();
+        }
+        
+        // Save edited task
+        async function saveEditedTask(id, title) {
+            if (!title.trim()) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update task');
+                }
+                
+                const updatedTask = await response.json();
+                tasks = tasks.map(task => task.id === id ? updatedTask : task);
+                
+                editingTaskId = null;
+                renderTasks();
+                showError(null);
+            } catch (error) {
+                console.error(error);
+                showError('Failed to update task. Please try again.');
+            }
+        }
+        
+        // Set the current filter
+        function setFilter(filter) {
+            currentFilter = filter;
+            
+            // Update active button
+            filterButtons.forEach(button => {
+                if (button.getAttribute('data-filter') === filter) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            
+            renderTasks();
+        }
+        
+        // Show or hide the error message
+        function showError(message) {
+            if (message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            } else {
+                errorMessage.style.display = 'none';
+            }
+        }
+        
+        // Show or hide the loading indicator
+        function showLoading(isLoading) {
+            loadingIndicator.style.display = isLoading ? 'block' : 'none';
+        }
+        
+        // Filter tasks based on the current filter
+        function getFilteredTasks() {
+            return tasks.filter(task => {
+                if (currentFilter === 'active') return !task.completed;
+                if (currentFilter === 'completed') return task.completed;
+                return true; // "all" filter
+            });
+        }
+        
+        // Format date string
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString(undefined, options);
+        }
+        
+        // Render the task list
+        function renderTasks() {
+            const filteredTasks = getFilteredTasks();
+            
+            // Show empty state if there are no tasks
+            if (filteredTasks.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+            }
+            
+            // Clear the task list
+            taskList.innerHTML = '';
+            
+            // Render each task
+            filteredTasks.forEach(task => {
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                
+                if (editingTaskId === task.id) {
+                    // Render edit form
+                    const editForm = document.createElement('div');
+                    editForm.className = 'edit-form';
+                    
+                    const editInput = document.createElement('input');
+                    editInput.className = 'edit-input';
+                    editInput.type = 'text';
+                    editInput.value = task.title;
+                    
+                    const saveButton = document.createElement('button');
+                    saveButton.className = 'save-button';
+                    saveButton.textContent = 'Save';
+                    saveButton.addEventListener('click', () => {
+                        saveEditedTask(task.id, editInput.value);
+                    });
+                    
+                    const cancelButton = document.createElement('button');
+                    cancelButton.className = 'cancel-button';
+                    cancelButton.textContent = 'Cancel';
+                    cancelButton.addEventListener('click', cancelEditingTask);
+                    
+                    editForm.appendChild(editInput);
+                    editForm.appendChild(saveButton);
+                    editForm.appendChild(cancelButton);
+                    
+                    taskItem.appendChild(editForm);
+                } else {
+                    // Render task content
+                    const taskContent = document.createElement('div');
+                    taskContent.className = 'task-content';
+                    
+                    const taskDetails = document.createElement('div');
+                    taskDetails.className = 'task-details';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.className = 'task-checkbox';
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = task.completed;
+                    checkbox.addEventListener('change', () => {
+                        toggleTaskCompletion(task.id);
+                    });
+                    
+                    const textContainer = document.createElement('div');
+                    if (task.completed) {
+                        textContainer.className = 'task-completed';
+                    }
+                    
+                    const taskText = document.createElement('div');
+                    taskText.className = 'task-text';
+                    taskText.textContent = task.title;
+                    
+                    const taskDate = document.createElement('div');
+                    taskDate.className = 'task-date';
+                    taskDate.textContent = `Created: ${formatDate(task.createdAt)}`;
+                    
+                    textContainer.appendChild(taskText);
+                    textContainer.appendChild(taskDate);
+                    
+                    taskDetails.appendChild(checkbox);
+                    taskDetails.appendChild(textContainer);
+                    
+                    const taskActions = document.createElement('div');
+                    taskActions.className = 'task-actions';
+                    
+                    const editButton = document.createElement('button');
+                    editButton.className = 'edit-button';
+                    editButton.textContent = 'Edit';
+                    editButton.addEventListener('click', () => {
+                        startEditingTask(task.id);
+                    });
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-button';
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.addEventListener('click', () => {
+                        deleteTask(task.id);
+                    });
+                    
+                    taskActions.appendChild(editButton);
+                    taskActions.appendChild(deleteButton);
+                    
+                    taskContent.appendChild(taskDetails);
+                    taskContent.appendChild(taskActions);
+                    
+                    taskItem.appendChild(taskContent);
+                }
+                
+                taskList.appendChild(taskItem);
+            });
+        }
+    </script>
+</body>
+</html>
